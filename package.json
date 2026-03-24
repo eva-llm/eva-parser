@@ -1,0 +1,39 @@
+{
+  "name": "eva-parser",
+  "version": "0.1.0",
+  "description": "A converter for Promptfoo test formats and Red Teaming plugins into the EVA-LLM ecosystem",
+  "main": "dst/index.js",
+  "types": "dst/index.d.ts",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "/dst"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "pnpm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eva-llm/eva-parser.git"
+  },
+  "author": "Sergei Chipiga",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eva-llm/eva-parser/issues"
+  },
+  "homepage": "https://github.com/eva-llm/eva-parser#readme",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.5.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "yaml": "^2.8.3",
+    "zod": "^4.3.6"
+  }
+}
