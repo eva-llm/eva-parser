@@ -10,7 +10,6 @@ const PromptfooSchema = z.object({
     assert: z.array(z.object({
       type: z.string(),
       value: z.union([z.string(), z.array(z.string())]),
-      model: z.string().optional(),
       provider: z.string().optional(),
       temperature: z.number().optional(),
       threshold: z.number().optional(),
@@ -37,7 +36,7 @@ export function parsePromptfoo(yamlContent: string) {
     for (const prompt of promptfoo.prompts || []) {
       for (const test of promptfoo.tests || []) {
 
-        const [ _provider, _model ] = provider.split(':');
+        const [_provider, _model] = provider.split(':');
         const evaTest = {
           provider: _provider,
           model: _model,
@@ -55,10 +54,12 @@ export function parsePromptfoo(yamlContent: string) {
             : [assert.value];
 
           for (const criterion of criteria) {
+            const [assertProvider, assertModel] = (assert.provider || ':').split(':');
+
             evaTest.asserts.push({
               name: assert.type,
-              provider: assert.provider || _provider,
-              model: assert.model || _model,
+              provider: assertProvider || _provider,
+              model: assertModel || _model,
               criteria: criterion,
               temperature: assert.temperature || 0.0,
               threshold: assert.threshold || 0.5,
