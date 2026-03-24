@@ -1,5 +1,5 @@
 {
-  "name": "eva-parser",
+  "name": "@eva-llm/eva-parser",
   "version": "0.1.0",
   "description": "A converter for Promptfoo test formats and Red Teaming plugins into the EVA-LLM ecosystem",
   "main": "dst/index.js",
