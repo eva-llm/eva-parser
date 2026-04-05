@@ -1,78 +1,163 @@
+import * as Mustache from 'mustache';
 import { parse } from 'yaml';
-import { z } from 'zod';
 
 
-const PromptfooSchema = z.object({
-  prompts: z.array(z.string()),
-  providers: z.array(z.string()).optional(),
-  tests: z.array(z.object({
-    vars: z.record(z.any(), z.any()).optional(),
-    assert: z.array(z.object({
-      type: z.string(),
-      value: z.union([z.string(), z.array(z.string())]),
-      provider: z.string().optional(),
-      temperature: z.number().optional(),
-      threshold: z.number().optional(),
-    }))
-  }))
-});
+import {
+  ASSERT_NAMES,
+  type AssertT,
+  type ProviderObjT,
+  type ModelOptionsT,
+} from './types';
 
-const LLM_JUDGE_ASSERT = ['g-eval', 'llm-rubric'];
 
-interface IAssert {
-  name: string;
-  criteria: string;
-  model?: string;
-  provider?: string;
-  temperature?: number;
-  threshold?: number;
+export * from './types';
+
+const parseProvider = (providerObj: string | ProviderObjT) => {
+  const options: ModelOptionsT = {};
+
+  if (typeof providerObj === 'string') {
+    const [ provider, model ] = providerObj.split(':');
+
+    return { provider, model, options };
+  }
+
+  const [ provider, model ] = providerObj.id.split(':');
+  const temperature = providerObj.config?.temperature;
+
+  if (temperature !== undefined) {
+    options.temperature = temperature;
+  }
+
+  return { provider, model, options };
+}
+
+const injectVars = (prompt: string, vars: undefined | Record<string, any>) => {
+  if (!vars) {
+    return prompt;
+  }
+  return Mustache.render(prompt, vars);
+}
+
+const parseAssert = (fooAssert: any): Omit<AssertT, 'criteria'> => {
+  let assert: Omit<AssertT, 'criteria'> = {
+    name: fooAssert.type,
+  };
+
+  if (fooAssert.threshold !== undefined) {
+    assert.threshold = fooAssert.threshold;
+  }
+
+  switch (fooAssert.type) {
+    case ASSERT_NAMES.BEVAL:
+    case ASSERT_NAMES.GEVAL:
+    case ASSERT_NAMES.LLM_RUBRIC:{
+      if (fooAssert.provider !== undefined) {
+        const parsedProvider = parseProvider(fooAssert.provider);
+
+        assert = {
+          ...assert,
+          ...parsedProvider,
+        }
+      }
+
+      if (fooAssert.must_fail !== undefined) {
+        assert.must_fail = fooAssert.must_fail;
+      }
+
+      if (fooAssert.answer_only !== undefined && fooAssert.type !== ASSERT_NAMES.LLM_RUBRIC) {
+        assert.answer_only = fooAssert.answer_only;
+      }
+
+      return assert;
+    }
+    case ASSERT_NAMES.EQUALS:
+    case ASSERT_NAMES.NOT_EQUALS:
+    case ASSERT_NAMES.CONTAINS:
+    case ASSERT_NAMES.NOT_CONTAINS:
+    case ASSERT_NAMES.REGEX: {
+      if (fooAssert.case_sensitive !== undefined && fooAssert.type !== ASSERT_NAMES.REGEX) {
+        assert.case_sensitive = fooAssert.case_sensitive;
+      }
+
+      return assert;
+    }
+    default:
+      throw new Error(`Unsupported assert type: ${fooAssert.type}`);
+  }
 }
 
 export function parsePromptfoo(yamlContent: string) {
-  const promptfoo = PromptfooSchema.parse(parse(yamlContent));
+  const promptfoo = parse(yamlContent);
   const evaTests = [];
 
-  for (const provider of promptfoo.providers || []) {
-    for (const prompt of promptfoo.prompts || []) {
-      for (const test of promptfoo.tests || []) {
+  for (const fooTest of promptfoo.tests || []) {
 
-        const [_provider, _model] = provider.split(':');
-        const evaTest = {
-          provider: _provider,
-          model: _model,
-          prompt,
-          asserts: [] as IAssert[],
-        };
+    if (!fooTest.assert) {
+      continue;
+    }
 
-        for (const assert of test.assert || []) {
-          if (!LLM_JUDGE_ASSERT.includes(assert.type)) {
-            continue;
-          }
+    const evaTest = {
+      vars: fooTest.vars,
+      asserts: [] as AssertT[],
+    };
 
-          const criteria = Array.isArray(assert.value)
-            ? assert.value
-            : [assert.value];
+    for (const fooAssert of fooTest.assert) {
+      if (!Object.values(ASSERT_NAMES).includes(fooAssert.type)) {
+        continue;
+      }
 
-          for (const criterion of criteria) {
-            const [assertProvider, assertModel] = (assert.provider || ':').split(':');
+      const criteria = Array.isArray(fooAssert.value)
+        ? fooAssert.value
+        : [fooAssert.value];
 
-            evaTest.asserts.push({
-              name: assert.type,
-              provider: assertProvider || _provider,
-              model: assertModel || _model,
-              criteria: criterion,
-              temperature: assert.temperature || 0.0,
-              threshold: assert.threshold || 0.5,
-            });
-          }
-        }
+      const evaAssert = parseAssert(fooAssert);
 
-        if (evaTest.asserts.length > 0) {
-          evaTests.push(evaTest);
-        }
+      for (const criterion of criteria) {
+        evaTest.asserts.push({
+            ...evaAssert,
+            criteria: criterion,
+          });
       }
     }
+    evaTests.push(evaTest);
   }
 
-  return evaTests;
+  if (!evaTests.length) {
+    return [];
+  }
+
+  const evaTestsWithPrompts = [];
+  for (const fooPrompt of promptfoo.prompts || []) {
+    for (const evaTest of evaTests) {
+
+      evaTestsWithPrompts.push({
+        prompt: injectVars(fooPrompt, evaTest.vars),
+        asserts: evaTest.asserts,
+      });
+    } 
+  }
+
+  const finalTests = [];
+  for (const providerObj of promptfoo.providers || []) {
+    const parsedProvider = parseProvider(providerObj);
+
+    for (const evaTestWithPrompt of evaTestsWithPrompts) {
+      const asserts = evaTestWithPrompt.asserts.map(assert => {
+        if (assert.provider === undefined) {
+          return {
+            ...assert,
+            ...parsedProvider,
+          }
+        }
+        return assert;
+      });
+
+      finalTests.push({
+        ...parsedProvider,
+        prompt: evaTestWithPrompt.prompt,
+        asserts,
+      });
+    }
+  }
+  return finalTests;
 }

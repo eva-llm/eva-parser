@@ -1,7 +1,7 @@
 {
   "name": "@eva-llm/eva-parser",
-  "version": "0.1.0",
-  "description": "A converter for Promptfoo test formats and Red Teaming plugins into the EVA-LLM ecosystem",
+  "version": "1.0.0",
+  "description": "A converter for Promptfoo test formats and into the EVA-LLM ecosystem",
   "main": "dst/index.js",
   "types": "dst/index.d.ts",
   "engines": {
@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "pnpm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -24,15 +24,17 @@
   "bugs": {
     "url": "https://github.com/eva-llm/eva-parser/issues"
   },
-  "homepage": "https://github.com/eva-llm/eva-parser#readme",
+  "homepage": "https://eva-llm.github.io/eva-parser",
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/mustache": "^4.2.6",
     "@types/node": "^25.5.0",
     "jest": "^30.3.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "mustache": "^4.2.0",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"
   }

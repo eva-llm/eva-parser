@@ -1,44 +1,158 @@
 # eva-parser
 
-A converter for Promptfoo test formats and Red Teaming plugins into the EVA-LLM ecosystem.
+A converter for [Promptfoo](https://www.promptfoo.dev/docs/category/configuration/) test formats into the EVA-LLM ecosystem `eva-run` format.
 
-## Features
-- Converts Promptfoo YAML test suites to EVA-LLM compatible format
-- Supports validation using Zod schemas
-- Designed for integration with EVA-LLM tools and workflows
+NOTE! It supports restricted Promptfoo format and extends it with own features (see examples below)
 
-## Installation
+## Quick Start
 
 ```bash
-npm install eva-parser
+npm i @eva-llm/eva-parser
 ```
 
-## Usage
+```ts
+import { parsePromptfoo } from '@eva-llm/eva-parser';
 
-```typescript
-import { EvaParser } from 'eva-parser';
-import fs from 'fs';
-
-const yamlContent = fs.readFileSync('promptfooconfig.yaml', 'utf-8');
-const evaTestSuite = EvaParser.fromPromptfoo(yamlContent);
-console.log(evaTestSuite);
+const evaTests = parsePromptfoo(promptfooYamlContent);
 ```
 
-## API
+## Supported Promptfoo Items
 
-### EvaParser.fromPromptfoo(yamlContent: string): object
-Converts a Promptfoo YAML config string to an EVA-LLM test suite object.
+### Providers
 
-#### Parameters
-- `yamlContent`: The YAML string in Promptfoo format.
+```yml
+providers:
+  - openai:gpt-5-mini
+  - openai:gpt-4.1-mini
+```
 
-#### Returns
-- An object representing the EVA-LLM test suite.
+```yml
+providers:
+  - id: openai:gpt-5.2
+    config:
+      temperature: 0
+```
 
-## Development
+### Prompts
 
-- Build: `npm run build`
-- Type check: `tsc`
+```yml
+prompts:
+  - Hello, how are you?
+  - What is the capital of France?
+```
+
+```yml
+prompts:
+  - What is the capital of {{country}}
+```
+
+### Variables
+
+```yml
+test:
+  - vars:
+      country: France
+```
+
+### Asserts
+
+NOTE! All LLM asserts support natively [Dark Teaming](https://eva-llm.github.io/dark-teaming) to measure Epistemic Honesty via Symmetry Deviation, and extend Promptfoo format with field `must_fail`
+
+#### [b-eval](https://eva-llm.github.io/eva-judge/#beval-binary-g-eval) (binary g-eval - eva-llm specific)
+
+```yml
+test:
+  - assert:
+      - type: b-eval
+        value: answer is coherent to question # can be array as well
+        threshold: 0.5 # optional (default is 0.5 in eva-run)
+        provider: # optional (default is test provider)
+          - id: openai:gpt-4.1-mini
+            config:
+              temperature: 0 # optional (default is 0 in eva-run as factual standard for better judging)
+        must_fail: true # optional (default false, eva-run specific) - Dark Teaming field
+        answer_only: true # optional (default false, eva-run specific) - analyze only LLM answer without prompt involvement
+```
+
+#### g-eval
+
+```yml
+test:
+  - assert:
+      - type: g-eval
+        value: answer is coherent to question # can be array as well
+        threshold: 0.5 # optional (default is 0.5 in eva-run)
+        provider: # optional (default is test provider)
+          - id: openai:gpt-4.1-mini
+            config:
+              temperature: 0 # optional (default is 0 in eva-run as factual standard for better judging)
+        must_fail: true # optional (default false, eva-run specific) - Dark Teaming field
+        answer_only: true # optional (default false, eva-run specific) - analyze only LLM answer without prompt involvement
+```
+
+#### llm-rubric
+
+```yml
+test:
+  - assert:
+      - type: llm-rubric
+        value: answer is polite # can be array as well
+        threshold: 0.5 # optional (default is 0.5 in eva-run)
+        provider: # optional (default is test provider)
+          - id: openai:gpt-4.1-mini
+            config:
+              temperature: 0 # optional (default is 0 in eva-run as factual standard for better judging)
+        must_fail: true # optional (default false, eva-run specific) - Dark Teaming field
+```
+
+#### equals
+
+```yml
+test:
+  - assert:
+    - type: equals
+      value: Paris
+      case_sensitive: false # optional (default true, eva-run specific)
+```
+
+#### not-equals
+
+```yml
+test:
+  - assert:
+    - type: not-equals
+      value: Chicago
+      case_sensitive: false # optional (default true, eva-run specific)
+```
+
+#### contains
+
+```yml
+test:
+  - assert:
+    - type: contains
+      value: Paris
+      case_sensitive: false # optional (default true, eva-run specific)
+```
+
+#### not-contains
+
+```yml
+test:
+  - assert:
+    - type: not-contains
+      value: Chicago
+      case_sensitive: false # optional (default true, eva-run specific)
+```
+
+#### regex
+
+```yml
+test:
+  - assert:
+    - type: regex
+      value: /paris/i
+```
 
 ## License
 
