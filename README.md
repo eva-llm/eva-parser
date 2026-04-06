@@ -1,6 +1,6 @@
 # eva-parser
 
-A converter for [Promptfoo](https://www.promptfoo.dev/docs/category/configuration/) test formats into the EVA-LLM ecosystem `eva-run` format.
+A converter for [Promptfoo](https://www.promptfoo.dev/docs/category/configuration/) test formats into the EVA-LLM ecosystem `eva-run` tasks.
 
 **NOTE!** It supports restricted Promptfoo format and extends it with own features (see examples below).
 
