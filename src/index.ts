@@ -106,9 +106,13 @@ export function parsePromptfoo(yamlContent: string) {
         continue;
       }
 
-      const criteria = Array.isArray(fooAssert.value)
+      let criteria = Array.isArray(fooAssert.value)
         ? fooAssert.value
         : [fooAssert.value];
+
+      if (fooAssert.times !== undefined) {
+        criteria = new Array(Number(fooAssert.times)).fill(criteria).flat();
+      }
 
       const evaAssert = parseAssert(fooAssert);
 

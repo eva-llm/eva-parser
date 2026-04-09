@@ -68,6 +68,7 @@ test:
           - id: openai:gpt-4.1-mini
             config:
               temperature: 0 # optional (default is 0 in eva-run as factual standard for better judging)
+        times: 5 # optional (default 1, eva-run specific) - repeat assert N times
         must_fail: true # optional (default false, eva-run specific) - Dark Teaming field
         answer_only: true # optional (default false, eva-run specific) - analyze only LLM answer without prompt involvement
 ```
@@ -84,6 +85,7 @@ test:
           - id: openai:gpt-4.1-mini
             config:
               temperature: 0 # optional (default is 0 in eva-run as factual standard for better judging)
+        times: 5 # optional (default 1, eva-run specific) - repeat assert N times
         must_fail: true # optional (default false, eva-run specific) - Dark Teaming field
         answer_only: true # optional (default false, eva-run specific) - analyze only LLM answer without prompt involvement
 ```
@@ -100,6 +102,7 @@ test:
           - id: openai:gpt-4.1-mini
             config:
               temperature: 0 # optional (default is 0 in eva-run as factual standard for better judging)
+        times: 5 # optional (default 1, eva-run specific) - repeat assert N times
         must_fail: true # optional (default false, eva-run specific) - Dark Teaming field
 ```
 
@@ -111,6 +114,7 @@ test:
     - type: equals
       value: Paris
       case_sensitive: false # optional (default true, eva-run specific)
+      times: 5 # optional (default 1, eva-run specific) - repeat assert N times
 ```
 
 #### not-equals
@@ -121,6 +125,7 @@ test:
     - type: not-equals
       value: Chicago
       case_sensitive: false # optional (default true, eva-run specific)
+      times: 5 # optional (default 1, eva-run specific) - repeat assert N times
 ```
 
 #### contains
@@ -131,6 +136,7 @@ test:
     - type: contains
       value: Paris
       case_sensitive: false # optional (default true, eva-run specific)
+      times: 5 # optional (default 1, eva-run specific) - repeat assert N times
 ```
 
 #### not-contains
@@ -141,6 +147,7 @@ test:
     - type: not-contains
       value: Chicago
       case_sensitive: false # optional (default true, eva-run specific)
+      times: 5 # optional (default 1, eva-run specific) - repeat assert N times
 ```
 
 #### regex
@@ -150,7 +157,10 @@ test:
   - assert:
     - type: regex
       value: /paris/i
+      times: 5 # optional (default 1, eva-run specific) - repeat assert N times
 ```
+
+---
 
 ## License
 
