@@ -91,39 +91,41 @@ export function parsePromptfoo(yamlContent: string) {
   const evaTests = [];
 
   for (const fooTest of promptfoo.tests || []) {
+    for (let i = 0; i < (fooTest.times || 1); i++) {
 
-    if (!fooTest.assert) {
-      continue;
-    }
-
-    const evaTest = {
-      vars: fooTest.vars,
-      asserts: [] as AssertT[],
-    };
-
-    for (const fooAssert of fooTest.assert) {
-      if (!Object.values(ASSERT_NAMES).includes(fooAssert.type)) {
+      if (!fooTest.assert) {
         continue;
       }
 
-      let criteria = Array.isArray(fooAssert.value)
-        ? fooAssert.value
-        : [fooAssert.value];
+      const evaTest = {
+        vars: fooTest.vars,
+        asserts: [] as AssertT[],
+      };
 
-      if (fooAssert.times !== undefined) {
-        criteria = new Array(Number(fooAssert.times)).fill(criteria).flat();
+      for (const fooAssert of fooTest.assert) {
+        if (!Object.values(ASSERT_NAMES).includes(fooAssert.type)) {
+          continue;
+        }
+
+        let criteria = Array.isArray(fooAssert.value)
+          ? fooAssert.value
+          : [fooAssert.value];
+
+        if (fooAssert.times !== undefined) {
+          criteria = new Array(Number(fooAssert.times)).fill(criteria).flat();
+        }
+
+        const evaAssert = parseAssert(fooAssert);
+
+        for (const criterion of criteria) {
+          evaTest.asserts.push({
+              ...evaAssert,
+              criteria: criterion,
+            });
+        }
       }
-
-      const evaAssert = parseAssert(fooAssert);
-
-      for (const criterion of criteria) {
-        evaTest.asserts.push({
-            ...evaAssert,
-            criteria: criterion,
-          });
-      }
+      evaTests.push(evaTest);
     }
-    evaTests.push(evaTest);
   }
 
   if (!evaTests.length) {
