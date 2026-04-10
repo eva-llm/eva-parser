@@ -46,6 +46,13 @@ prompts:
   - What is the capital of {{country}}
 ```
 
+### Repeat
+
+```yml
+test:
+  times: 50 # optional (default 1), eva-run specific, used for AI Metrology statistics.
+```
+
 ### Variables
 
 ```yml
