@@ -2,7 +2,9 @@
 
 A converter for [Promptfoo](https://www.promptfoo.dev/docs/category/configuration/) test formats into the EVA-LLM ecosystem `eva-run` tasks.
 
-**NOTE!** It supports restricted Promptfoo format and extends it with own features (see examples below).
+**NOTE!** It supports a strictly validated subset of the Promptfoo format, extended with native EVA-LLM features for high-scale metrology (see examples below).
+
+---
 
 ## Quick Start
 
@@ -15,6 +17,8 @@ import { parsePromptfoo } from '@eva-llm/eva-parser';
 
 const evaTests = parsePromptfoo(promptfooYamlContent);
 ```
+
+---
 
 ## Supported Promptfoo Items
 
@@ -168,9 +172,3 @@ test:
       value: /paris/i
       times: 5 # optional (default 1, eva-run specific) - repeat assert N times
 ```
-
----
-
-## License
-
-MIT
