@@ -1,7 +1,6 @@
 import * as Mustache from 'mustache';
 import { parse } from 'yaml';
 
-
 import {
   ASSERT_NAMES,
   type AssertT,
