@@ -8,4 +8,21 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  coverageDirectory: "coverage",
+  coverageProvider: "v8",
+  collectCoverageFrom: [
+    "src/**/*.{ts,js}",
+    "!src/**/*.d.ts",
+    "!src/types/**",
+    "!**/node_modules/**"
+  ],
+  coverageReporters: ["text", "lcov", "clover"],
+  coverageThreshold: {
+    global: {
+      branches: 90,
+      functions: 95,
+      lines: 95,
+      statements: 95,
+    },
+  },
 };

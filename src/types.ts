@@ -9,10 +9,10 @@ export const ASSERT_NAMES = {
   REGEX: 'regex',
 } as const;
 
-export type AssertName = (typeof ASSERT_NAMES)[keyof typeof ASSERT_NAMES];
+export type TAssertName = (typeof ASSERT_NAMES)[keyof typeof ASSERT_NAMES];
 
-export type AssertT = {
-  name: AssertName;
+export type TAssert = {
+  name: TAssertName;
   criteria: string;
   threshold?: number;
   provider?: string;
@@ -23,11 +23,9 @@ export type AssertT = {
   case_sensitive?: boolean;
 }
 
-export type ProviderObjT = {
+export type TProviderObj = {
   id: string;
   config: Record<string, any>;
 }
 
-export type ModelOptionsT = {
-  temperature?: number;
-}
+export type TVercelOptions = Record<string, any>;
