@@ -31,7 +31,7 @@ providers:
 ```yml
 providers:
   - id: openai:gpt-5.2
-    config:
+    config: # Any Vercel ai-sdk option: https://ai-sdk.dev/docs/reference/ai-sdk-core/generate-text#api-signature
       temperature: 0
 ```
 

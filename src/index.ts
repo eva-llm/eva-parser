@@ -3,16 +3,16 @@ import { parse } from 'yaml';
 
 import {
   ASSERT_NAMES,
-  type AssertT,
-  type ProviderObjT,
-  type ModelOptionsT,
+  type TAssert,
+  type TProviderObj,
+  type TVercelOptions,
 } from './types';
 
 
 export * from './types';
 
-const parseProvider = (providerObj: string | ProviderObjT) => {
-  const options: ModelOptionsT = {};
+const parseProvider = (providerObj: string | TProviderObj) => {
+  let options: TVercelOptions = {};
 
   if (typeof providerObj === 'string') {
     const [ provider, model ] = providerObj.split(':');
@@ -21,10 +21,9 @@ const parseProvider = (providerObj: string | ProviderObjT) => {
   }
 
   const [ provider, model ] = providerObj.id.split(':');
-  const temperature = providerObj.config?.temperature;
 
-  if (temperature !== undefined) {
-    options.temperature = temperature;
+  if (providerObj.config !== undefined) {
+    options = providerObj.config;
   }
 
   return { provider, model, options };
@@ -37,8 +36,8 @@ const injectVars = (prompt: string, vars: undefined | Record<string, any>) => {
   return Mustache.render(prompt, vars);
 }
 
-const parseAssert = (fooAssert: any): Omit<AssertT, 'criteria'> => {
-  let assert: Omit<AssertT, 'criteria'> = {
+const parseAssert = (fooAssert: any): Omit<TAssert, 'criteria'> => {
+  let assert: Omit<TAssert, 'criteria'> = {
     name: fooAssert.type,
   };
 
@@ -98,7 +97,7 @@ export function parsePromptfoo(yamlContent: string) {
 
       const evaTest = {
         vars: fooTest.vars,
-        asserts: [] as AssertT[],
+        asserts: [] as TAssert[],
       };
 
       for (const fooAssert of fooTest.assert) {
