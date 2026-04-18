@@ -417,8 +417,8 @@ tests:
         value: Hi
 `;
       const results = parsePromptfoo(yaml);
-      expect(results.find(r => r.provider === 'openai')).toBeDefined();
-      expect(results.find(r => r.provider === 'anthropic')).toBeDefined();
+      expect(results.find(r => 'provider' in r && r.provider === 'openai')).toBeDefined();
+      expect(results.find(r => 'provider' in r && r.provider === 'anthropic')).toBeDefined();
     });
   });
 
@@ -453,6 +453,162 @@ tests:
     });
   });
 
+  describe('test with output (JQA)', () => {
+    it('produces result with output and no provider/model when test has output', () => {
+      const yaml = `
+prompts: ['Say hi']
+providers: ['openai:gpt-4o']
+tests:
+  - output: "Hello there"
+    assert:
+      - type: contains
+        value: Hello
+`;
+      const results = parsePromptfoo(yaml);
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        prompt: 'Say hi',
+        output: 'Hello there',
+      });
+      expect(results[0].asserts[0].criteria).toBe('Hello');
+      expect('provider' in results[0]).toBe(false);
+      expect('model' in results[0]).toBe(false);
+    });
+
+    it('produces result with provider/model and no output when test has no output', () => {
+      const yaml = `
+prompts: ['Say hi']
+providers: ['openai:gpt-4o']
+tests:
+  - assert:
+      - type: contains
+        value: Hello
+`;
+      const results = parsePromptfoo(yaml);
+      expect(results).toHaveLength(1);
+      expect('provider' in results[0] && results[0].provider).toBe('openai');
+      expect('model' in results[0] && results[0].model).toBe('gpt-4o');
+      expect('output' in results[0]).toBe(false);
+    });
+
+    it('handles mix of tests with and without output', () => {
+      const yaml = `
+prompts: ['Hello']
+providers: ['openai:gpt-4o']
+tests:
+  - output: "Pre-generated response"
+    assert:
+      - type: contains
+        value: response
+  - assert:
+      - type: contains
+        value: hi
+`;
+      const results = parsePromptfoo(yaml);
+      expect(results).toHaveLength(2);
+
+      const withOutput = results[0];
+      expect('output' in withOutput).toBe(true);
+      expect('provider' in withOutput).toBe(false);
+
+      const withoutOutput = results[1];
+      expect('output' in withoutOutput).toBe(false);
+      expect('provider' in withoutOutput && withoutOutput.provider).toBe('openai');
+    });
+
+    it('output test still inherits provider in asserts that lack one', () => {
+      const yaml = `
+prompts: ['Hello']
+providers: ['openai:gpt-4o']
+tests:
+  - output: "Some response"
+    assert:
+      - type: g-eval
+        value: The response is friendly
+`;
+      const results = parsePromptfoo(yaml);
+      expect(results[0].asserts[0].provider).toBe('openai');
+      expect(results[0].asserts[0].model).toBe('gpt-4o');
+    });
+
+    it('output test with assert-level provider keeps assert provider', () => {
+      const yaml = `
+prompts: ['Hello']
+providers: ['openai:gpt-4o']
+tests:
+  - output: "Some response"
+    assert:
+      - type: g-eval
+        value: The response is friendly
+        provider: anthropic:claude-3-5-sonnet
+`;
+      const results = parsePromptfoo(yaml);
+      expect(results[0].asserts[0].provider).toBe('anthropic');
+      expect(results[0].asserts[0].model).toBe('claude-3-5-sonnet');
+    });
+
+    it('output test with multiple providers produces one result per provider', () => {
+      const yaml = `
+prompts: ['Hello']
+providers:
+  - openai:gpt-4o
+  - anthropic:claude-3-5-sonnet
+tests:
+  - output: "Pre-generated"
+    assert:
+      - type: contains
+        value: generated
+`;
+      const results = parsePromptfoo(yaml);
+      // 2 providers × 1 prompt × 1 test = 2
+      expect(results).toHaveLength(2);
+      // Both should have output, no provider on the result
+      for (const r of results) {
+        expect('output' in r && r.output).toBe('Pre-generated');
+        expect('provider' in r).toBe(false);
+      }
+    });
+
+    it('output test with vars still injects vars into prompt', () => {
+      const yaml = `
+prompts: ['Tell me about {{topic}}']
+providers: ['openai:gpt-4o']
+tests:
+  - vars:
+      topic: dolphins
+    output: "Dolphins are amazing marine mammals"
+    assert:
+      - type: contains
+        value: dolphin
+`;
+      const results = parsePromptfoo(yaml);
+      expect(results[0].prompt).toBe('Tell me about dolphins');
+      expect('output' in results[0] && results[0].output).toBe('Dolphins are amazing marine mammals');
+    });
+
+    it('output test cross-product with multiple prompts', () => {
+      const yaml = `
+prompts:
+  - 'Prompt A'
+  - 'Prompt B'
+providers: ['openai:gpt-4o']
+tests:
+  - output: "Fixed response"
+    assert:
+      - type: contains
+        value: response
+`;
+      const results = parsePromptfoo(yaml);
+      // 1 provider × 2 prompts × 1 test = 2
+      expect(results).toHaveLength(2);
+      expect(results[0].prompt).toBe('Prompt A');
+      expect(results[1].prompt).toBe('Prompt B');
+      for (const r of results) {
+        expect('output' in r && r.output).toBe('Fixed response');
+      }
+    });
+  });
+
   describe('provider as object', () => {
     it('parses top-level provider object with temperature', () => {
       const yaml = `
@@ -467,9 +623,9 @@ tests:
         value: Hi
 `;
       const results = parsePromptfoo(yaml);
-      expect(results[0].provider).toBe('openai');
-      expect(results[0].model).toBe('gpt-4o');
-      expect(results[0].options).toEqual({ temperature: 0.5 });
+      expect('provider' in results[0] && results[0].provider).toBe('openai');
+      expect('model' in results[0] && results[0].model).toBe('gpt-4o');
+      expect('options' in results[0] && results[0].options).toEqual({ temperature: 0.5 });
     });
 
     it('parses top-level provider object without temperature', () => {
@@ -484,7 +640,7 @@ tests:
         value: Hi
 `;
       const results = parsePromptfoo(yaml);
-      expect(results[0].options).toEqual({});
+      expect('options' in results[0] && results[0].options).toEqual({});
     });
   });
 });

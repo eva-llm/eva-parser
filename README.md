@@ -65,6 +65,15 @@ test:
       country: France
 ```
 
+### Output override
+
+```yml
+prompts:
+  - What is the capital of France?
+test:
+  - output: Paris # Used in JQA tests: https://eva-llm.github.io/eva-run/#jqa-judge-quality-audit-metrology-mode
+```
+
 ### Asserts
 
 **NOTE!** All LLM asserts support natively [Dark Teaming](https://eva-llm.github.io/dark-teaming) to measure Epistemic Honesty via Symmetry Deviation, and extend Promptfoo format with field `must_fail`
