@@ -4,12 +4,19 @@ import { parse } from 'yaml';
 import {
   ASSERT_NAMES,
   type TAssert,
+  type TEvaTest,
+  type TEvaTestWithPrompt,
   type TProviderObj,
+  type TTest,
   type TVercelOptions,
 } from './types';
 
 
-export * from './types';
+export {
+  ASSERT_NAMES,
+  type TTest,
+  type TAssert,
+} from './types';
 
 const parseProvider = (providerObj: string | TProviderObj) => {
   let options: TVercelOptions = {};
@@ -86,7 +93,7 @@ const parseAssert = (fooAssert: any): Omit<TAssert, 'criteria'> => {
 
 export function parsePromptfoo(yamlContent: string) {
   const promptfoo = parse(yamlContent);
-  const evaTests = [];
+  const evaTests: TEvaTest[] = [];
 
   for (const fooTest of promptfoo.tests || []) {
     for (let i = 0; i < (fooTest.times || 1); i++) {
@@ -95,9 +102,13 @@ export function parsePromptfoo(yamlContent: string) {
         continue;
       }
 
-      const evaTest = {
+      const evaTest: TEvaTest = {
         vars: fooTest.vars,
         asserts: [] as TAssert[],
+      };
+
+      if (fooTest.output !== undefined) {
+        evaTest.output = fooTest.output;
       };
 
       for (const fooAssert of fooTest.assert) {
@@ -130,18 +141,24 @@ export function parsePromptfoo(yamlContent: string) {
     return [];
   }
 
-  const evaTestsWithPrompts = [];
+  const evaTestsWithPrompts: TEvaTestWithPrompt[] = [];
   for (const fooPrompt of promptfoo.prompts || []) {
     for (const evaTest of evaTests) {
 
-      evaTestsWithPrompts.push({
+      const evaTestWithPrompt: TEvaTestWithPrompt = {
         prompt: injectVars(fooPrompt, evaTest.vars),
         asserts: evaTest.asserts,
-      });
+      };
+
+      if (evaTest.output !== undefined) {
+        evaTestWithPrompt.output = evaTest.output;
+      }
+
+      evaTestsWithPrompts.push(evaTestWithPrompt);
     } 
   }
 
-  const finalTests = [];
+  const evaRunTasks: TTest[] = [];
   for (const providerObj of promptfoo.providers || []) {
     const parsedProvider = parseProvider(providerObj);
 
@@ -156,12 +173,20 @@ export function parsePromptfoo(yamlContent: string) {
         return assert;
       });
 
-      finalTests.push({
-        ...parsedProvider,
-        prompt: evaTestWithPrompt.prompt,
-        asserts,
-      });
+      if (evaTestWithPrompt.output !== undefined) {
+        evaRunTasks.push({
+          prompt: evaTestWithPrompt.prompt,
+          output: evaTestWithPrompt.output,
+          asserts,
+        });
+      } else {
+        evaRunTasks.push({
+          ...parsedProvider,
+          prompt: evaTestWithPrompt.prompt,
+          asserts,
+        });
+      }
     }
   }
-  return finalTests;
+  return evaRunTasks;
 }

@@ -23,6 +23,30 @@ export type TAssert = {
   case_sensitive?: boolean;
 }
 
+export type TEvaTest = {
+  vars: undefined | Record<string, any>;
+  output?: string;
+  asserts: TAssert[];
+}
+
+export type TEvaTestWithPrompt = {
+  prompt: string;
+  output?: string;
+  asserts: TAssert[];
+}
+
+export type TTest = {
+  prompt: string;
+  output: string;
+  asserts: TAssert[];
+} | {
+  provider: string;
+  model: string;
+  options?: TVercelOptions
+  prompt: string;
+  asserts: TAssert[];
+}
+
 export type TProviderObj = {
   id: string;
   config: Record<string, any>;
