@@ -12,7 +12,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "prepare": "pnpm run build",
+    "prepare": "husky",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "test": "jest",
     "test:coverage": "jest --coverage"
   },
@@ -27,12 +29,16 @@
   },
   "homepage": "https://eva-llm.github.io/eva-parser",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/jest": "^30.0.0",
     "@types/mustache": "^4.2.6",
     "@types/node": "^25.5.0",
     "jest": "^30.3.0",
+    "husky": "^9.1.7",
     "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3"
+    "eslint": "^10.2.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.1"
   },
   "dependencies": {
     "mustache": "^4.2.0",

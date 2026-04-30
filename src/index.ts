@@ -36,6 +36,7 @@ const parseProvider = (providerObj: string | TProviderObj) => {
   return { provider, model, options };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const injectVars = (prompt: string, vars: undefined | Record<string, any>) => {
   if (!vars) {
     return prompt;
@@ -43,6 +44,7 @@ const injectVars = (prompt: string, vars: undefined | Record<string, any>) => {
   return Mustache.render(prompt, vars);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const parseAssert = (fooAssert: any): Omit<TAssert, 'criteria'> => {
   let assert: Omit<TAssert, 'criteria'> = {
     name: fooAssert.type,

@@ -24,6 +24,7 @@ export type TAssert = {
 }
 
 export type TEvaTest = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   vars: undefined | Record<string, any>;
   output?: string;
   asserts: TAssert[];
@@ -49,7 +50,9 @@ export type TTest = {
 
 export type TProviderObj = {
   id: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   config: Record<string, any>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type TVercelOptions = Record<string, any>;
